@@ -1,0 +1,254 @@
+# ★第一部分，系统配置
+port: 7890        # HTTP 代理端口
+socks-port: 7891  # SOCKS5 代理端口
+mixed-port: 1080  # HTTP and SOCKS5 代理 混合端口
+redir-port: 7892 # 透明代理端口, Linux and macOS 使用，包括Openwrt
+allow-lan: false
+bind-address: "*" # 是否允许局域网连接，bind-address: "*" 代表允许所有
+mode: "rule"        # 运行模式，rule 规则 / global 全局 / direct 直连
+log-level: "silent" # info / warning / error / debug / silent # silent 表示静默
+#interface-name: 本地连接            # 出口网卡名称，例如“本地连接”，Tun 模式使用
+ipv6: false                          # true 启用，false 关闭
+external-controller: "0.0.0.0:9090"  # 面板调用地址为 本机ip:9090 或 http://clash.razord.top
+
+
+
+# ★第二部分，DNS配置
+# 下方为DNS配置，如无此段，关闭DNS功能，此段设置与规则配合使用
+# 本模板用域名白名单分流，小白谨慎修改DNS，114.114.114.114 可替换为从ISP自动获取的地址
+dns:
+  enable: true                     # true 启用，false 关闭
+  listen: 0.0.0.0:53             # 监听端口，openwrt转发端口注意
+
+  # 仅填写 DNS 服务器的 IP 地址
+  default-nameserver:
+    - 1.2.4.8
+    - 223.5.5.5
+    - 114.114.114.114
+    - 119.29.29.29
+  enhanced-mode: redir-host # 或 fake-ip
+  fake-ip-range: 198.18.0.1/16 # Fake IP 地址池 (CIDR 形式)
+  fake-ip-filter:                                             # fake-ip 白名单
+    - '*.lan'
+    - 'localhost.ptlogin2.qq.com'
+    - 'dns.msftncsi.com'
+    - 'www.msftncsi.com'
+    - 'www.msftconnecttest.com'
+
+  nameserver:
+    - tls://13800000000.rubyfish.cn
+    - tls://dot.360.cn
+    - tls://dns.alidns.com
+
+
+
+
+# ★第三部分，代理配置
+#############################################★注意，★★替换
+proxies:                                           # 自建节点列表
+  # ★V2ray 自建节点 1  ★Vmess+TLS+Websocket 方式
+  - name: "🇭🇰 香港节点"                                # 节点名，与下方组设置一致，否则报错
+    type: vmess                                    # 节点类型
+    server: mock.percyz.cn                           # ★★服务器，替换为你自己的
+    port: 443
+    uuid: 3c8c03c8-a3b6-4948-ba58-d2d757500740  # ★★UUID，替换为你自己的
+    alterId: 32
+    cipher: auto
+    udp: true
+    tls: true
+    skip-cert-verify: false
+    network: ws
+    ws-path: /cyberpunk                              # ★★websocket路径，替换为你自己的
+
+  # ★V2ray 自建节点 2  ★Vmess+TLS+Websocket 方式
+  - name: "🇭🇰 香港备用"                                # 节点名，与下方组设置一致，否则报错
+    type: vmess                                    # 节点类型
+    server: kaneki.doomo.club                            # ★★服务器，替换为你自己的
+    port: 443
+    uuid: 0448cd9e-e41e-45ad-9699-fe02e73c5591   # ★★UUID，替换为你自己的
+    alterId: 5
+    cipher: auto
+    udp: true
+    tls: true
+    skip-cert-verify: false
+    network: ws
+    ws-path: /cyberpunk2077                        # ★★websocket路径，替换为你自己的
+
+  # ★V2ray 自建节点3   ★Vmess+TLS+Websocket 方式
+  - name: "🇦🇺 澳洲节点"                                # 节点名，与下方组设置一致，否则报错
+    type: vmess                                    # 节点类型
+    server: www.percyz.com                           # ★★服务器，替换为你自己的
+    port: 443
+    uuid: 785ef0df-d612-ff7c-f00a-5facda890cd8  # ★★UUID，替换为你自己的
+    alterId: 32
+    cipher: auto
+    udp: true
+    tls: true
+    skip-cert-verify: false
+    network: ws
+    ws-path: /cyberpunk                              # ★★websocket路径，替换为你自己的
+
+
+proxy-groups:                                   # 代理组列表
+
+  - name: "🔰 节点选择"                              # ★组名，包含下面的（节点/组）
+    type: select                                # select 表示手动切换，默认proxies第一个
+    proxies:                                    # 代理节点（组）列表
+      - "🇭🇰 香港节点"                               # 节点名  与上方设置一致，否则报错
+      - "🇭🇰 香港备用"                               # 节点名，与上方设置一致，否则报错
+      - "🇦🇺 澳洲节点"                                # 节点名，与上方设置一致，否则报错
+
+
+# ★第四部分，规则配置
+###规则集来自★Loyalsoldier★大神
+###默认关闭规则自动更新，启用去掉url行最前面的#，仅删除#，不要删除空格
+rule-providers:
+  reject:
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/reject.txt"
+    path: ./ruleset/reject.yaml
+    interval: 86400
+
+  icloud:
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/icloud.txt"
+    path: ./ruleset/icloud.yaml
+    interval: 86400
+
+  apple:
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/apple.txt"
+    path: ./ruleset/apple.yaml
+    interval: 86400
+
+  google:
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/google.txt"
+    path: ./ruleset/google.yaml
+    interval: 86400
+
+  proxy:
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/proxy.txt"
+    path: ./ruleset/proxy.yaml
+    interval: 86400
+
+  direct:
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/direct.txt"
+    path: ./ruleset/direct.yaml
+    interval: 86400
+
+  private:
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/private.txt"
+    path: ./ruleset/private.yaml
+    interval: 86400
+
+  gfw:
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/gfw.txt"
+    path: ./ruleset/gfw.yaml
+    interval: 86400
+
+  greatfire:
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/greatfire.txt"
+    path: ./ruleset/greatfire.yaml
+    interval: 86400
+
+  tld-not-cn:
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/tld-not-cn.txt"
+    path: ./ruleset/tld-not-cn.yaml
+    interval: 86400
+
+  telegramcidr:
+    type: http
+    behavior: ipcidr
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/telegramcidr.txt"
+    path: ./ruleset/telegramcidr.yaml
+    interval: 86400
+
+  cncidr:
+    type: http
+    behavior: ipcidr
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/cncidr.txt"
+    path: ./ruleset/cncidr.yaml
+    interval: 86400
+
+  lancidr:
+    type: http
+    behavior: ipcidr
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/lancidr.txt"
+    path: ./ruleset/lancidr.yaml
+    interval: 86400
+
+rules:
+  - PROCESS-NAME,v2ray,DIRECT
+  - PROCESS-NAME,xray,DIRECT
+  - PROCESS-NAME,naive,DIRECT
+  - PROCESS-NAME,trojan,DIRECT
+  - PROCESS-NAME,trojan-go,DIRECT
+  - PROCESS-NAME,ss-local,DIRECT
+  - PROCESS-NAME,privoxy,DIRECT
+  - PROCESS-NAME,leaf,DIRECT
+  - PROCESS-NAME,v2ray.exe,DIRECT
+  - PROCESS-NAME,xray.exe,DIRECT
+  - PROCESS-NAME,naive.exe,DIRECT
+  - PROCESS-NAME,trojan.exe,DIRECT
+  - PROCESS-NAME,trojan-go.exe,DIRECT
+  - PROCESS-NAME,ss-local.exe,DIRECT
+  - PROCESS-NAME,privoxy.exe,DIRECT
+  - PROCESS-NAME,leaf.exe,DIRECT
+  - PROCESS-NAME,Surge,DIRECT
+  - PROCESS-NAME,Surge 2,DIRECT
+  - PROCESS-NAME,Surge 3,DIRECT
+  - PROCESS-NAME,Surge 4,DIRECT
+  - PROCESS-NAME,Surge%202,DIRECT
+  - PROCESS-NAME,Surge%203,DIRECT
+  - PROCESS-NAME,Surge%204,DIRECT
+  - PROCESS-NAME,Thunder,DIRECT
+  - PROCESS-NAME,DownloadService,DIRECT
+  - PROCESS-NAME,qBittorrent,DIRECT
+  - PROCESS-NAME,Transmission,DIRECT
+  - PROCESS-NAME,fdm,DIRECT
+  - PROCESS-NAME,aria2c,DIRECT
+  - PROCESS-NAME,Folx,DIRECT
+  - PROCESS-NAME,NetTransport,DIRECT
+  - PROCESS-NAME,uTorrent,DIRECT
+  - PROCESS-NAME,WebTorrent,DIRECT
+  - PROCESS-NAME,aria2c.exe,DIRECT
+  - PROCESS-NAME,BitComet.exe,DIRECT
+  - PROCESS-NAME,fdm.exe,DIRECT
+  - PROCESS-NAME,NetTransport.exe,DIRECT
+  - PROCESS-NAME,qbittorrent.exe,DIRECT
+  - PROCESS-NAME,Thunder.exe,DIRECT
+  - PROCESS-NAME,ThunderVIP.exe,DIRECT
+  - PROCESS-NAME,transmission-daemon.exe,DIRECT
+  - PROCESS-NAME,transmission-qt.exe,DIRECT
+  - PROCESS-NAME,uTorrent.exe,DIRECT
+  - PROCESS-NAME,WebTorrent.exe,DIRECT
+  - DOMAIN,clash.razord.top,DIRECT
+  - DOMAIN,yacd.haishan.me,DIRECT
+  - RULE-SET,private,DIRECT
+  - RULE-SET,reject,REJECT
+  - RULE-SET,icloud,DIRECT
+  - RULE-SET,apple,DIRECT
+  - RULE-SET,google,DIRECT
+  - RULE-SET,proxy,🔰 节点选择
+  - RULE-SET,direct,DIRECT
+  - RULE-SET,telegramcidr,🔰 节点选择
+  - GEOIP,,DIRECT
+  - GEOIP,CN,DIRECT
+  - MATCH,🔰 节点选择
